@@ -9,18 +9,29 @@
       return [];
     }
   }
+
   function saveWords(list){
     localStorage.setItem(KEY, JSON.stringify(list));
   }
-  function addWord(word,pos,def){
+
+  // ⭐ 修改：加入 pos2（選填）
+  function addWord(word, pos, def, pos2 = null){
     const list = getWords();
-    list.push({word: (word||'').trim(), pos: (pos||'').trim(), def: (def||'').trim()});
+    list.push({
+      word: (word||'').trim(),
+      pos: (pos||'').trim(),
+      pos2: (pos2||'').trim() || null,   // ← 第二詞性可以是 null
+      def: (def||'').trim()
+    });
     saveWords(list);
     return list;
   }
-  function clearWords(){ localStorage.removeItem(KEY); }
 
-  // 當沒有資料時加入一些範例單字
+  function clearWords(){ 
+    localStorage.removeItem(KEY);
+  }
+
+  // 當沒有資料時加入一些範例單字（保持原狀）
   function ensureSample(){
     const list = getWords();
     if (list.length === 0){
@@ -35,7 +46,10 @@
     return list;
   }
 
-  function normalize(s){ return (s||'').toString().trim().toLowerCase(); }
+  // 工具：格式化
+  function normalize(s){ 
+    return (s||'').toString().trim().toLowerCase(); 
+  }
 
   window.vocab = {
     getWords,
@@ -43,11 +57,18 @@
     addWord,
     clearWords,
     ensureSample,
-    // 檢查答案 (簡單比對，忽略大小寫與前後空白)
+
+    // ⭐ 可選：檢查答案（加入 pos2 兼容）
     checkAnswer(item, userWord, userPos){
       const okWord = normalize(item.word) === normalize(userWord);
-      const okPos = normalize(item.pos) === normalize(userPos);
+
+      // 主要詞性正確 OR 第二詞性正確都算對（你可依需求調整）
+      const okPos =
+        normalize(item.pos) === normalize(userPos) ||
+        normalize(item.pos2) === normalize(userPos);
+
       return {okWord, okPos};
     }
   };
 })();
+

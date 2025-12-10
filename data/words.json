@@ -16,22 +16,6 @@
     "active": true
   },
   {
-    "id": 6,
-    "word": "aboard",
-    "pos": "adverb",
-    "def": "在車、船、飛機上",
-    "sample": false,
-    "active": true
-  },
-  {
-    "id": 7,
-    "word": "aboard",
-    "pos": "preposition",
-    "def": "在車、船、飛機上",
-    "sample": false,
-    "active": true
-  },
-  {
     "id": 8,
     "word": "abroad",
     "pos": "noun",
@@ -84,6 +68,15 @@
     "word": "bored",
     "pos": "adjective",
     "def": "感到無聊的",
+    "sample": false,
+    "active": true
+  },
+  {
+    "id": 16,
+    "word": "aboard",
+    "pos": "preposition",
+    "pos2": "adverb",
+    "def": "在車、船、飛機上",
     "sample": false,
     "active": true
   }

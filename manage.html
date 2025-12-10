@@ -39,7 +39,14 @@
         const rows = list.map(item => {
           return `<div style="display:flex;align-items:center;gap:12px;padding:8px;border-bottom:1px solid #eee">
             <input type="checkbox" data-id="${item.id}" ${item.active? 'checked':''}>
-            <div style="flex:1"><strong>${item.word}</strong> <span class="muted">(${item.pos})</span><div class="muted">${item.def}</div></div>
+            <div style="flex:1">
+  <strong>${item.word}</strong>
+  <span class="muted">
+    (${item.pos}${item.pos2 ? ' , ' + item.pos2 : ''})
+  </span>
+  <div class="muted">${item.def}</div>
+</div>
+
             <button data-delete="${item.id}" class="btn secondary">刪除</button>
           </div>`;
         }).join('');
