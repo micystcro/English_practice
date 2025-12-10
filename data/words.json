@@ -11,7 +11,7 @@
     "id": 5,
     "word": "upon",
     "pos": "preposition",
-    "def": "在...之上",
+    "def": "在...之上、接近",
     "sample": false,
     "active": true
   },
@@ -28,6 +28,62 @@
     "word": "aboard",
     "pos": "preposition",
     "def": "在車、船、飛機上",
+    "sample": false,
+    "active": true
+  },
+  {
+    "id": 8,
+    "word": "abroad",
+    "pos": "noun",
+    "def": "國外",
+    "sample": false,
+    "active": true
+  },
+  {
+    "id": 9,
+    "word": "abroad",
+    "pos": "adverb",
+    "def": "在國外",
+    "sample": false,
+    "active": true
+  },
+  {
+    "id": 10,
+    "word": "board",
+    "pos": "noun",
+    "def": "木板、董事會、膳食",
+    "sample": false,
+    "active": true
+  },
+  {
+    "id": 11,
+    "word": "board",
+    "pos": "verb",
+    "def": "登機(船、車)、寄宿",
+    "sample": false,
+    "active": true
+  },
+  {
+    "id": 12,
+    "word": "within",
+    "pos": "preposition",
+    "def": "在...之內",
+    "sample": false,
+    "active": true
+  },
+  {
+    "id": 13,
+    "word": "within",
+    "pos": "adverb",
+    "def": "在心中、在裡面",
+    "sample": false,
+    "active": true
+  },
+  {
+    "id": 14,
+    "word": "bored",
+    "pos": "adjective",
+    "def": "感到無聊的",
     "sample": false,
     "active": true
   }

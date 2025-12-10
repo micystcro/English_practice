@@ -68,15 +68,6 @@
         // score display removed per request
         const nextBtn = document.getElementById('nextBtn');
 
-        if (!poolWords || poolWords.length === 0){
-          // 如果沒有可出題的單字 (即使有範例單字也不算)，提示使用者新增單字
-          noWords.style.display = '';
-          questionBlock.classList.add('hidden');
-          return;
-        }
-        noWords.style.display = 'none';
-        questionBlock.classList.remove('hidden');
-
         // 以非 sample 單字作為預設 pool
         let pool = poolWords.slice();
         // 嘗試從後端取得已標記為 active 的題庫 (若有啟動後端)
@@ -91,17 +82,43 @@
         }catch(e){
           // 無伺服器，使用 localStorage 的 poolWords
         }
+
+        // 檢查是否有可用的題庫（現在已嘗試後端）
+        if (!pool || pool.length === 0){
+          // 如果沒有可出題的單字，提示使用者新增單字
+          noWords.style.display = '';
+          questionBlock.classList.add('hidden');
+          return;
+        }
+        noWords.style.display = 'none';
+        questionBlock.classList.remove('hidden');
+        
+        // 洗牌函數（Fisher-Yates）
+        function shuffle(arr){
+          const copy = [...arr];
+          for (let i = copy.length - 1; i > 0; i--){
+            const j = Math.floor(Math.random() * (i + 1));
+            [copy[i], copy[j]] = [copy[j], copy[i]];
+          }
+          return copy;
+        }
+        
         let current = null;
         let asked = 0; // 題次計數
+        let shuffledPool = shuffle(pool); // 初始洗牌
 
         function nextQuestion(){
           feedback.textContent = '';
           posInput.value = '';
           wordInput.value = '';
           posInput.disabled = false; wordInput.disabled = false; document.getElementById('submitBtn').disabled = false;
-          if (pool.length === 0) pool = poolWords.slice();
-          const idx = Math.floor(Math.random()*pool.length);
-          current = pool.splice(idx,1)[0];
+          
+          // 當洗牌池用完時，重新洗牌（這樣可確保每個循環不重複，且題目隨機）
+          if (shuffledPool.length === 0) {
+            shuffledPool = shuffle(pool);
+          }
+          
+          current = shuffledPool.shift(); // 取第一個，並移除
           definitionEl.textContent = current.def;
           // 更新題次（每次出題時 +1）
           asked += 1;
