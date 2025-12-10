@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>English Practice — 單字測驗</title>
+		<link rel="stylesheet" href="styles.css">
+	</head>
+	<body>
+		<main class="container">
+			<h1>English Practice</h1>
+			<p>根據字義填寫詞性與單字。</p>
+
+			<nav class="nav">
+				<a class="btn" href="quiz.html">開始測驗</a>
+				<a class="btn" href="add.html">新增單字</a>
+			</nav>
+
+			<section id="summary">
+				<p>目前單字數：<span id="wordCount">0</span></p>
+			</section>
+
+			
+		</main>
+
+		<script src="app.js"></script>
+		<script>
+			// 在主頁顯示單字數量（只計算非 sample 單字）
+			document.addEventListener('DOMContentLoaded', ()=>{
+				if (window.vocab) window.vocab.ensureSample();
+				const words = window.vocab ? window.vocab.getWords() : [];
+				const count = (words || []).filter(w => !w.sample).length;
+				document.getElementById('wordCount').textContent = count;
+			});
+		</script>
+	</body>
+</html>

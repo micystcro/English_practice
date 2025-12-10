@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>測驗 — English Practice</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="container">
+      <h1>單字測驗</h1>
+      <p class="muted">根據下方字義填寫「詞性」與「單字」。答案不區分大小寫。</p>
+
+      <div id="quizArea">
+        <div id="noWords" class="muted center">沒有可用的單字。請先 <a href="add.html">新增單字</a>。</div>
+
+        <div id="questionBlock" class="hidden">
+          <div class="meta">第 <span id="questionNumber">0</span> 題</div>
+          <div class="question" id="definition"></div>
+
+          <form id="answerForm">
+            <div class="row">
+              <div>
+                <label for="pos">詞性 (part of speech)</label>
+                <select id="pos">
+                  <option value="">-- 請選擇 --</option>
+                  <option value="noun">名詞 (noun)</option>
+                  <option value="verb">動詞 (verb)</option>
+                  <option value="adjective">形容詞 (adjective)</option>
+                  <option value="adverb">副詞 (adverb)</option>
+                  <option value="preposition">介係詞 (preposition)</option>
+                  <option value="phrase">片語 (phrase)</option>
+                  <option value="interjection">嘆詞 (interjection)</option>
+                </select>
+              </div>
+              <div>
+                <label for="word">單字 (word)</label>
+                <input id="word" type="text" autocomplete="off">
+              </div>
+            </div>
+            <div class="controls">
+              <button id="submitBtn" type="submit" class="btn">提交</button>
+              <button id="nextBtn" type="button" class="btn secondary">下一題</button>
+              <a class="btn" href="index.html">回主頁</a>
+            </div>
+          </form>
+
+          <div id="feedback" aria-live="polite"></div>
+        </div>
+      </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', ()=>{
+        window.vocab.ensureSample();
+        const words = window.vocab.getWords();
+        // 只使用非 sample 的單字作為出題庫 (範例單字不會出現在考題)
+        const poolWords = (words || []).filter(w => !w.sample);
+        const noWords = document.getElementById('noWords');
+        const questionBlock = document.getElementById('questionBlock');
+        const definitionEl = document.getElementById('definition');
+        const questionNumberEl = document.getElementById('questionNumber');
+        const form = document.getElementById('answerForm');
+        const posInput = document.getElementById('pos');
+        const wordInput = document.getElementById('word');
+        const feedback = document.getElementById('feedback');
+        // score display removed per request
+        const nextBtn = document.getElementById('nextBtn');
+
+        if (!poolWords || poolWords.length === 0){
+          // 如果沒有可出題的單字 (即使有範例單字也不算)，提示使用者新增單字
+          noWords.style.display = '';
+          questionBlock.classList.add('hidden');
+          return;
+        }
+        noWords.style.display = 'none';
+        questionBlock.classList.remove('hidden');
+
+        // 以非 sample 單字作為 pool
+        let pool = poolWords.slice();
+        let current = null;
+        let asked = 0; // 題次計數
+
+        function nextQuestion(){
+          feedback.textContent = '';
+          posInput.value = '';
+          wordInput.value = '';
+          posInput.disabled = false; wordInput.disabled = false; document.getElementById('submitBtn').disabled = false;
+          if (pool.length === 0) pool = words.slice();
+          const idx = Math.floor(Math.random()*pool.length);
+          current = pool.splice(idx,1)[0];
+          definitionEl.textContent = current.def;
+          // 更新題次（每次出題時 +1）
+          asked += 1;
+          if (questionNumberEl) questionNumberEl.textContent = asked;
+          // focus first input
+          posInput.focus();
+        }
+
+        // score tracking removed; no updateMeta needed
+
+        form.addEventListener('submit', (e)=>{
+          e.preventDefault();
+          if (!current) return;
+          const userPos = posInput.value.trim();
+          const userWord = wordInput.value.trim();
+          const res = window.vocab.checkAnswer(current, userWord, userPos);
+          let html = '';
+          if (res.okWord && res.okPos){
+            html = '<div class="feedback ok">全部正確！</div>';
+          } else {
+            let parts = [];
+            if (!res.okPos) parts.push('詞性答案錯誤 (正確：<strong>' + current.pos + '</strong>)');
+            if (!res.okWord) parts.push('單字答案錯誤 (正確：<strong>' + current.word + '</strong>)');
+            html = '<div class="feedback wrong">' + parts.join('；') + '</div>';
+          }
+          feedback.innerHTML = html;
+          // disable inputs直到下一題
+          posInput.disabled = true; wordInput.disabled = true; document.getElementById('submitBtn').disabled = true;
+        });
+
+        nextBtn.addEventListener('click', ()=>{
+          nextQuestion();
+        });
+
+        // start
+        nextQuestion();
+      });
+    </script>
+  </body>
+</html>

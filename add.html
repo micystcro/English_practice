@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>新增單字 — English Practice</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="container">
+      <h1>新增單字</h1>
+      <p class="muted">請填入單字、詞性與字義，將儲存在瀏覽器的 localStorage。</p>
+
+      <form id="addForm">
+        <label for="word">單字 (word)</label>
+        <input id="word" type="text" required>
+
+        <label for="pos">詞性 (part of speech)</label>
+        <select id="pos">
+          <option value="noun">名詞 (noun)</option>
+          <option value="verb">動詞 (verb)</option>
+          <option value="adjective">形容詞 (adjective)</option>
+          <option value="adverb">副詞 (adverb)</option>
+          <option value="preposition">介係詞 (preposition)</option>
+          <option value="phrase">片語 (phrase)</option>
+          <option value="interjection">嘆詞 (interjection)</option>
+        </select>
+
+        <label for="def">字義 (definition)</label>
+        <textarea id="def" rows="4" required></textarea>
+
+        <div class="controls">
+          <button class="btn" type="submit">新增</button>
+          <a class="btn" href="index.html">回主頁</a>
+        </div>
+      </form>
+
+      <div id="result" aria-live="polite" style="margin-top:12px"></div>
+
+      <div class="meta">
+        <button id="clearBtn" class="btn secondary" style="margin-top:12px">清除所有單字 (localStorage)</button>
+      </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', ()=>{
+        const form = document.getElementById('addForm');
+        const wordIn = document.getElementById('word');
+        const posIn = document.getElementById('pos');
+        const defIn = document.getElementById('def');
+        const result = document.getElementById('result');
+        const clearBtn = document.getElementById('clearBtn');
+
+        form.addEventListener('submit', (e)=>{
+          e.preventDefault();
+          const word = wordIn.value.trim();
+          let pos = posIn.value.trim();
+          if (!pos) pos = prompt('請輸入詞性，例如: noun, verb, adjective') || '';
+          const def = defIn.value.trim();
+          if (!word || !def){ result.innerHTML = '<div class="feedback wrong">請填寫必要欄位。</div>'; return; }
+          window.vocab.addWord(word,pos,def);
+          result.innerHTML = '<div class="feedback ok">已新增：<strong>' + word + '</strong></div>';
+          form.reset();
+          wordIn.focus();
+        });
+
+        clearBtn.addEventListener('click', ()=>{
+          if (!confirm('確定要清除所有單字嗎？這會清空 localStorage 中的詞庫。')) return;
+          window.vocab.clearWords();
+          result.innerHTML = '<div class="feedback ok">已清除所有單字。</div>';
+        });
+      });
+    </script>
+  </body>
+</html>
