@@ -52,15 +52,27 @@
         const result = document.getElementById('result');
         const clearBtn = document.getElementById('clearBtn');
 
-        form.addEventListener('submit', (e)=>{
+        form.addEventListener('submit', async (e)=>{
           e.preventDefault();
           const word = wordIn.value.trim();
           let pos = posIn.value.trim();
           if (!pos) pos = prompt('請輸入詞性，例如: noun, verb, adjective') || '';
           const def = defIn.value.trim();
           if (!word || !def){ result.innerHTML = '<div class="feedback wrong">請填寫必要欄位。</div>'; return; }
+          // 先嘗試呼叫後端 API，若失敗則回退到 localStorage
+          try{
+            const res = await fetch('/api/words', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ word, pos, def, sample:false }) });
+            if (res.ok){
+              const created = await res.json();
+              result.innerHTML = '<div class="feedback ok">已新增（伺服器）：<strong>' + created.word + '</strong></div>';
+              form.reset(); wordIn.focus();
+              return;
+            }
+          }catch(e){
+            // 無法連到伺服器，回退到 local
+          }
           window.vocab.addWord(word,pos,def);
-          result.innerHTML = '<div class="feedback ok">已新增：<strong>' + word + '</strong></div>';
+          result.innerHTML = '<div class="feedback ok">已新增（本機）：<strong>' + word + '</strong></div>';
           form.reset();
           wordIn.focus();
         });

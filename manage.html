@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>管理單字 — English Practice</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="container">
+      <h1>單字管理</h1>
+      <p class="muted">從伺服器讀取所有單字，勾選要包含在測驗中的項目，然後按「儲存變更」。</p>
+
+      <div class="controls" style="margin-bottom:12px">
+        <button id="refreshBtn" class="btn">重新整理</button>
+        <button id="selectAllBtn" class="btn secondary">全選</button>
+        <button id="clearAllBtn" class="btn secondary">取消全選</button>
+        <button id="saveBtn" class="btn">儲存變更</button>
+        <a class="btn" href="index.html">回主頁</a>
+      </div>
+
+      <div id="tableWrap"></div>
+      <div id="result" aria-live="polite"></div>
+    </main>
+
+    <script>
+      async function fetchWords(){
+        try{
+          const res = await fetch('/api/words');
+          if (!res.ok) throw new Error('bad');
+          return await res.json();
+        }catch(e){
+          return null;
+        }
+      }
+
+      function renderTable(list){
+        if (!list) { document.getElementById('tableWrap').innerHTML = '<p class="muted">無法連線到伺服器。</p>'; return; }
+        const rows = list.map(item => {
+          return `<div style="display:flex;align-items:center;gap:12px;padding:8px;border-bottom:1px solid #eee">
+            <input type="checkbox" data-id="${item.id}" ${item.active? 'checked':''}>
+            <div style="flex:1"><strong>${item.word}</strong> <span class="muted">(${item.pos})</span><div class="muted">${item.def}</div></div>
+            <button data-delete="${item.id}" class="btn secondary">刪除</button>
+          </div>`;
+        }).join('');
+        document.getElementById('tableWrap').innerHTML = rows;
+      }
+
+      async function init(){
+        const list = await fetchWords();
+        renderTable(list);
+      }
+
+      document.addEventListener('DOMContentLoaded', ()=>{
+        init();
+        document.getElementById('refreshBtn').addEventListener('click', init);
+        document.getElementById('selectAllBtn').addEventListener('click', ()=>{
+          document.querySelectorAll('#tableWrap input[type="checkbox"]').forEach(cb=>cb.checked=true);
+        });
+        document.getElementById('clearAllBtn').addEventListener('click', ()=>{
+          document.querySelectorAll('#tableWrap input[type="checkbox"]').forEach(cb=>cb.checked=false);
+        });
+        document.getElementById('saveBtn').addEventListener('click', async ()=>{
+          const checks = Array.from(document.querySelectorAll('#tableWrap input[type="checkbox"]'));
+          let ok = true;
+          for (const cb of checks){
+            const id = cb.getAttribute('data-id');
+            try{
+              const res = await fetch('/api/words/' + id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ active: cb.checked })});
+              if (!res.ok) ok = false;
+            }catch(e){ ok = false; }
+          }
+          document.getElementById('result').innerHTML = ok ? '<div class="feedback ok">已儲存變更</div>' : '<div class="feedback wrong">儲存失敗</div>';
+          init();
+        });
+
+        // delegate delete
+        document.getElementById('tableWrap').addEventListener('click', async (e)=>{
+          const id = e.target.getAttribute('data-delete');
+          if (!id) return;
+          if (!confirm('確定刪除此單字？')) return;
+          try{
+            const res = await fetch('/api/words/' + id, { method: 'DELETE' });
+            if (res.ok) { document.getElementById('result').innerHTML = '<div class="feedback ok">已刪除</div>'; init(); }
+            else document.getElementById('result').innerHTML = '<div class="feedback wrong">刪除失敗</div>';
+          }catch(e){ document.getElementById('result').innerHTML = '<div class="feedback wrong">刪除失敗</div>'; }
+        });
+      });
+    </script>
+  </body>
+</html>

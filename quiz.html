@@ -52,10 +52,10 @@
 
     <script src="app.js"></script>
     <script>
-      document.addEventListener('DOMContentLoaded', ()=>{
+      document.addEventListener('DOMContentLoaded', async ()=>{
         window.vocab.ensureSample();
         const words = window.vocab.getWords();
-        // 只使用非 sample 的單字作為出題庫 (範例單字不會出現在考題)
+        // 只使用非 sample 的單字作為本地出題庫 (範例單字不會出現在考題)
         const poolWords = (words || []).filter(w => !w.sample);
         const noWords = document.getElementById('noWords');
         const questionBlock = document.getElementById('questionBlock');
@@ -77,8 +77,20 @@
         noWords.style.display = 'none';
         questionBlock.classList.remove('hidden');
 
-        // 以非 sample 單字作為 pool
+        // 以非 sample 單字作為預設 pool
         let pool = poolWords.slice();
+        // 嘗試從後端取得已標記為 active 的題庫 (若有啟動後端)
+        try{
+          const res = await fetch('/api/words?active=true');
+          if (res.ok){
+            const serverWords = await res.json();
+            if (serverWords && serverWords.length > 0){
+              pool = serverWords.slice();
+            }
+          }
+        }catch(e){
+          // 無伺服器，使用 localStorage 的 poolWords
+        }
         let current = null;
         let asked = 0; // 題次計數
 
@@ -87,7 +99,7 @@
           posInput.value = '';
           wordInput.value = '';
           posInput.disabled = false; wordInput.disabled = false; document.getElementById('submitBtn').disabled = false;
-          if (pool.length === 0) pool = words.slice();
+          if (pool.length === 0) pool = poolWords.slice();
           const idx = Math.floor(Math.random()*pool.length);
           current = pool.splice(idx,1)[0];
           definitionEl.textContent = current.def;
