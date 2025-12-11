@@ -21,7 +21,7 @@
           <form id="answerForm">
             <div class="row">
               <div>
-                <label for="pos">詞性 (part of speech)</label>
+                <label for="pos">主要詞性 (part of speech 1)</label>
                 <select id="pos">
                   <option value="">-- 請選擇 --</option>
                   <option value="noun">名詞 (noun)</option>
@@ -33,11 +33,27 @@
                   <option value="interjection">嘆詞 (interjection)</option>
                 </select>
               </div>
+
+              <div>
+                <label for="pos2">次要詞性（選填）</label>
+                <select id="pos2">
+                  <option value="">-- 無 --</option>
+                  <option value="noun">名詞 (noun)</option>
+                  <option value="verb">動詞 (verb)</option>
+                  <option value="adjective">形容詞 (adjective)</option>
+                  <option value="adverb">副詞 (adverb)</option>
+                  <option value="preposition">介係詞 (preposition)</option>
+                  <option value="phrase">片語 (phrase)</option>
+                  <option value="interjection">嘆詞 (interjection)</option>
+                </select>
+              </div>
+
               <div>
                 <label for="word">單字 (word)</label>
                 <input id="word" type="text" autocomplete="off">
               </div>
             </div>
+
             <div class="controls">
               <button id="submitBtn" type="submit" class="btn">提交</button>
               <button id="nextBtn" type="button" class="btn secondary">下一題</button>
@@ -63,6 +79,7 @@
         const questionNumberEl = document.getElementById('questionNumber');
         const form = document.getElementById('answerForm');
         const posInput = document.getElementById('pos');
+        const pos2Input = document.getElementById('pos2'); // 新增
         const wordInput = document.getElementById('word');
         const feedback = document.getElementById('feedback');
         // score display removed per request
@@ -107,47 +124,93 @@
         let asked = 0; // 題次計數
         let shuffledPool = shuffle(pool); // 初始洗牌
 
-        function nextQuestion(){
+        function nextQuestion() {
           feedback.textContent = '';
-          posInput.value = '';
-          wordInput.value = '';
-          posInput.disabled = false; wordInput.disabled = false; document.getElementById('submitBtn').disabled = false;
-          
-          // 當洗牌池用完時，重新洗牌（這樣可確保每個循環不重複，且題目隨機）
-          if (shuffledPool.length === 0) {
-            shuffledPool = shuffle(pool);
-          }
-          
-          current = shuffledPool.shift(); // 取第一個，並移除
+
+          posInput.disabled = false;
+          pos2Input.disabled = false;
+          wordInput.disabled = false;
+          document.getElementById('submitBtn').disabled = false;
+
+          posInput.value = "";
+          pos2Input.value = "";   // <-- 你缺這行，所以會留下上一題的值
+          wordInput.value = "";
+
+          // 題目選擇
+          if (shuffledPool.length === 0) shuffledPool = shuffle(pool);
+
+          current = shuffledPool.shift();
           definitionEl.textContent = current.def;
-          // 更新題次（每次出題時 +1）
+
           asked += 1;
-          if (questionNumberEl) questionNumberEl.textContent = asked;
-          // focus first input
+          questionNumberEl.textContent = asked;
+
+          // ---- 題目是否有 pos2？ ----
+          if (!current.pos2) {
+            // 題目只有一個詞性 → 第二欄關閉 + 顯示「-- 無 --」
+            pos2Input.value = "";
+            pos2Input.disabled = false;
+          } else {
+            // 題目有兩個詞性 → 第二欄正常使用
+            pos2Input.disabled = false;
+          }
+
           posInput.focus();
         }
+
 
         // score tracking removed; no updateMeta needed
 
         form.addEventListener('submit', (e)=>{
           e.preventDefault();
           if (!current) return;
-          const userPos = posInput.value.trim();
-          const userWord = wordInput.value.trim();
-          const res = window.vocab.checkAnswer(current, userWord, userPos);
-          let html = '';
-          if (res.okWord && res.okPos){
+
+          const userPos1 = posInput.value.trim();
+          const userPos2 = pos2Input.value.trim();
+          const userWord = wordInput.value.trim().toLowerCase();
+
+          const correctPos1 = current.pos;
+          const correctPos2 = current.pos2 || "";
+
+          // ---- 詞性正確判斷 ----
+          let okPos = false;
+
+          if (correctPos2 === "") {
+            // 題目只有一個詞性 → 使用者只能填一個詞性
+            okPos = (userPos1 === correctPos1 && userPos2 === "");
+          } else {
+            // 題目有兩個詞性 → pos2 可不填
+            okPos = (userPos1 === correctPos1 &&
+                    (userPos2 === correctPos2 || userPos2 === ""));
+          }
+
+          // ---- 單字判斷 ----
+          const okWord = (userWord === current.word.toLowerCase());
+
+          // ---- 顯示結果 ----
+          let html = "";
+          if (okWord && okPos) {
             html = '<div class="feedback ok">全部正確！</div>';
           } else {
             let parts = [];
-            if (!res.okPos) parts.push('詞性答案錯誤 (正確：<strong>' + current.pos + '</strong>)');
-            if (!res.okWord) parts.push('單字答案錯誤 (正確：<strong>' + current.word + '</strong>)');
+            const posText =
+              correctPos2 ? `${correctPos1}, ${correctPos2}` : correctPos1;
+
+            if (!okPos) parts.push(`詞性答案錯誤 (正確：<strong>${posText}</strong>)`);
+            if (!okWord) parts.push(`單字答案錯誤 (正確：<strong>${current.word}</strong>)`);
+
             html = '<div class="feedback wrong">' + parts.join('；') + '</div>';
           }
+
           feedback.innerHTML = html;
-          // disable inputs直到下一題
-          posInput.disabled = true; wordInput.disabled = true; document.getElementById('submitBtn').disabled = true;
+
+          posInput.disabled = true;
+          pos2Input.disabled = true;
+          wordInput.disabled = true;
+          document.getElementById('submitBtn').disabled = true;
         });
+
+
 
         nextBtn.addEventListener('click', ()=>{
           nextQuestion();
